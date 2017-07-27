@@ -114,6 +114,11 @@ public:
   virtual ListenerManager& listenerManager() PURE;
 
   /**
+   * @return the server's http route manager.
+   */
+  virtual HttpRouteManager& httpRouteManager() PURE;
+
+  /**
    * @return the server's CLI options.
    */
   virtual Options& options() PURE;

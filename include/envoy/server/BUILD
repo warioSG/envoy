@@ -50,12 +50,19 @@ envoy_cc_library(
 )
 
 envoy_cc_library(
+    name = "http_route_manager_interface",
+    hdrs = ["http_route_manager.h"],
+    deps = ["//include/envoy/router:rds_interface"],
+)
+
+envoy_cc_library(
     name = "instance_interface",
     hdrs = ["instance.h"],
     deps = [
         ":admin_interface",
         ":drain_manager_interface",
         ":hot_restart_interface",
+        ":http_route_manager_interface",
         ":listener_manager_interface",
         ":options_interface",
         "//include/envoy/access_log:access_log_interface",
@@ -100,6 +107,7 @@ envoy_cc_library(
     name = "filter_config_interface",
     hdrs = ["filter_config.h"],
     deps = [
+        ":http_route_manager_interface",
         "//include/envoy/access_log:access_log_interface",
         "//include/envoy/http:filter_interface",
         "//include/envoy/init:init_interface",

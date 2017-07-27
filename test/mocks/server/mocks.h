@@ -141,6 +141,17 @@ public:
   std::shared_ptr<Network::MockListenSocket> socket_;
 };
 
+class MockHttpRouteManager : public HttpRouteManager {
+public:
+  MockHttpRouteManager();
+  ~MockHttpRouteManager();
+
+  MOCK_METHOD0(routeConfigProviders, std::vector<Router::RouteConfigProviderSharedPtr>());
+  MOCK_METHOD2(addConfigProvider, void(const std::string& name, std::weak_ptr<Router::RouteConfigProvider> routeConfigProvider));
+  MOCK_METHOD1(getConfigProvider, Router::RouteConfigProviderSharedPtr(const std::string& name));
+  MOCK_METHOD1(removeRouteConfigProvider, void(const std::string& name));
+};
+
 class MockListenerManager : public ListenerManager {
 public:
   MockListenerManager();
@@ -240,6 +251,7 @@ public:
   MOCK_METHOD1(failHealthcheck, void(bool fail));
   MOCK_METHOD1(getParentStats, void(HotRestart::GetParentStatsInfo&));
   MOCK_METHOD0(healthCheckFailed, bool());
+  MOCK_METHOD0(httpRouteManager, HttpRouteManager&());
   MOCK_METHOD0(hotRestart, HotRestart&());
   MOCK_METHOD0(initManager, Init::Manager&());
   MOCK_METHOD0(listenerManager, ListenerManager&());
@@ -276,6 +288,7 @@ public:
   testing::NiceMock<LocalInfo::MockLocalInfo> local_info_;
   testing::NiceMock<Init::MockManager> init_manager_;
   testing::NiceMock<MockListenerManager> listener_manager_;
+  testing::NiceMock<MockHttpRouteManager> http_route_manager_;
 };
 
 namespace Configuration {
@@ -317,6 +330,7 @@ public:
   MOCK_METHOD0(dispatcher, Event::Dispatcher&());
   MOCK_METHOD0(drainDecision, const Network::DrainDecision&());
   MOCK_METHOD0(healthCheckFailed, bool());
+  MOCK_METHOD0(httpRouteManager, HttpRouteManager&());
   MOCK_METHOD0(httpTracer, Tracing::HttpTracer&());
   MOCK_METHOD0(initManager, Init::Manager&());
   MOCK_METHOD0(localInfo, const LocalInfo::LocalInfo&());
@@ -329,6 +343,7 @@ public:
 
   testing::NiceMock<AccessLog::MockAccessLogManager> access_log_manager_;
   testing::NiceMock<Upstream::MockClusterManager> cluster_manager_;
+  testing::NiceMock<MockHttpRouteManager> http_route_manager_;
   testing::NiceMock<Event::MockDispatcher> dispatcher_;
   testing::NiceMock<MockDrainManager> drain_manager_;
   testing::NiceMock<Tracing::MockHttpTracer> http_tracer_;

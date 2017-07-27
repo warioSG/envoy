@@ -66,6 +66,7 @@ public:
   void failHealthcheck(bool) override { NOT_IMPLEMENTED; }
   void getParentStats(HotRestart::GetParentStatsInfo&) override { NOT_IMPLEMENTED; }
   HotRestart& hotRestart() override { NOT_IMPLEMENTED; }
+  HttpRouteManager& httpRouteManager() override { return http_route_manager_; }
   Init::Manager& initManager() override { return init_manager_; }
   ListenerManager& listenerManager() override { return listener_manager_; }
   Runtime::RandomGenerator& random() override { return random_generator_; }
@@ -124,6 +125,7 @@ private:
   AccessLog::AccessLogManagerImpl access_log_manager_;
   std::unique_ptr<Upstream::ValidationClusterManagerFactory> cluster_manager_factory_;
   InitManagerImpl init_manager_;
+  HttpRouteManagerImpl http_route_manager_;
   ListenerManagerImpl listener_manager_;
 };
 

@@ -22,6 +22,7 @@
 #include "common/thread_local/thread_local_impl.h"
 
 #include "server/http/admin.h"
+#include "server/http_route_manager_impl.h"
 #include "server/init_manager_impl.h"
 #include "server/listener_manager_impl.h"
 #include "server/test_hooks.h"
@@ -107,6 +108,7 @@ public:
   HotRestart& hotRestart() override { return restarter_; }
   Init::Manager& initManager() override { return init_manager_; }
   ListenerManager& listenerManager() override { return *listener_manager_; }
+  HttpRouteManager& httpRouteManager() override { return *http_route_manager_; }
   Runtime::RandomGenerator& random() override { return random_generator_; }
   RateLimit::ClientPtr
   rateLimitClient(const Optional<std::chrono::milliseconds>& timeout) override {
@@ -148,6 +150,7 @@ private:
   std::unique_ptr<Ssl::ContextManagerImpl> ssl_context_manager_;
   ProdListenerComponentFactory listener_component_factory_;
   ProdWorkerFactory worker_factory_;
+  std::unique_ptr<HttpRouteManager> http_route_manager_;
   std::unique_ptr<ListenerManager> listener_manager_;
   std::unique_ptr<Configuration::Main> config_;
   Stats::ScopePtr admin_scope_;

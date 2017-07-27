@@ -7,6 +7,7 @@
 
 #include "test/mocks/init/mocks.h"
 #include "test/mocks/local_info/mocks.h"
+#include "test/mocks/server/mocks.h"
 #include "test/mocks/thread_local/mocks.h"
 #include "test/mocks/upstream/mocks.h"
 #include "test/test_common/printers.h"
@@ -45,7 +46,7 @@ public:
     interval_timer_ = new Event::MockTimer(&dispatcher_);
     EXPECT_CALL(init_manager_, registerTarget(_));
     rds_ = RouteConfigProviderUtil::create(*config, runtime_, cm_, dispatcher_, random_,
-                                           local_info_, store_, "foo.", tls_, init_manager_);
+                                           local_info_, store_, "foo.", tls_, init_manager_, http_route_manager_);
     expectRequest();
     init_manager_.initialize();
   }
@@ -75,7 +76,8 @@ public:
   NiceMock<ThreadLocal::MockInstance> tls_;
   NiceMock<Init::MockManager> init_manager_;
   Http::MockAsyncClientRequest request_;
-  RouteConfigProviderPtr rds_;
+  NiceMock<Server::MockHttpRouteManager> http_route_manager_;
+  RouteConfigProviderSharedPtr rds_;
   Event::MockTimer* interval_timer_{};
   Http::AsyncClient::Callbacks* callbacks_{};
 };
@@ -90,7 +92,7 @@ TEST_F(RdsImplTest, RdsAndStatic) {
 
   Json::ObjectSharedPtr config = Json::Factory::loadFromString(config_json);
   EXPECT_THROW(RouteConfigProviderUtil::create(*config, runtime_, cm_, dispatcher_, random_,
-                                               local_info_, store_, "foo.", tls_, init_manager_),
+                                               local_info_, store_, "foo.", tls_, init_manager_, http_route_manager_),
                EnvoyException);
 }
 
@@ -109,7 +111,7 @@ TEST_F(RdsImplTest, LocalInfoNotDefined) {
   local_info_.node_name_ = "";
   interval_timer_ = new Event::MockTimer(&dispatcher_);
   EXPECT_THROW(RouteConfigProviderUtil::create(*config, runtime_, cm_, dispatcher_, random_,
-                                               local_info_, store_, "foo.", tls_, init_manager_),
+                                               local_info_, store_, "foo.", tls_, init_manager_, http_route_manager_),
                EnvoyException);
 }
 
@@ -127,7 +129,7 @@ TEST_F(RdsImplTest, UnknownCluster) {
   ON_CALL(cm_, get("foo_cluster")).WillByDefault(Return(nullptr));
   interval_timer_ = new Event::MockTimer(&dispatcher_);
   EXPECT_THROW(RouteConfigProviderUtil::create(*config, runtime_, cm_, dispatcher_, random_,
-                                               local_info_, store_, "foo.", tls_, init_manager_),
+                                               local_info_, store_, "foo.", tls_, init_manager_, http_route_manager_),
                EnvoyException);
 }
 

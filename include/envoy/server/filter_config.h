@@ -10,6 +10,7 @@
 #include "envoy/network/filter.h"
 #include "envoy/ratelimit/ratelimit.h"
 #include "envoy/runtime/runtime.h"
+#include "envoy/server/http_route_manager.h"
 #include "envoy/tracing/http_tracer.h"
 #include "envoy/upstream/cluster_manager.h"
 
@@ -56,6 +57,11 @@ public:
    * @return whether external healthchecks are currently failed or not.
    */
   virtual bool healthCheckFailed() PURE;
+
+  /**
+   * @return HttpRouteManager& singleton for use by the entire server.
+   */
+  virtual HttpRouteManager& httpRouteManager() PURE;
 
   /**
    * @return the server-wide http tracer.

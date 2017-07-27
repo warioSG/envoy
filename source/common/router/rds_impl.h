@@ -8,6 +8,7 @@
 #include "envoy/json/json_object.h"
 #include "envoy/local_info/local_info.h"
 #include "envoy/router/rds.h"
+#include "envoy/server/http_route_manager.h"
 #include "envoy/thread_local/thread_local.h"
 
 #include "common/common/logger.h"
@@ -22,15 +23,15 @@ namespace Router {
 class RouteConfigProviderUtil {
 public:
   /**
-   * @return RouteConfigProviderPtr a new route configuration provider based on the supplied JSON
+   * @return RouteConfigProviderSharedPtr a new route configuration provider based on the supplied JSON
    *         configuration.
    */
-  static RouteConfigProviderPtr create(const Json::Object& config, Runtime::Loader& runtime,
+  static RouteConfigProviderSharedPtr create(const Json::Object& config, Runtime::Loader& runtime,
                                        Upstream::ClusterManager& cm, Event::Dispatcher& dispatcher,
                                        Runtime::RandomGenerator& random,
                                        const LocalInfo::LocalInfo& local_info, Stats::Scope& scope,
                                        const std::string& stat_prefix, ThreadLocal::Instance& tls,
-                                       Init::Manager& init_manager);
+                                       Init::Manager& init_manager, Server::HttpRouteManager& http_route_manager);
 };
 
 /**
@@ -106,7 +107,8 @@ private:
                              Upstream::ClusterManager& cm, Event::Dispatcher& dispatcher,
                              Runtime::RandomGenerator& random,
                              const LocalInfo::LocalInfo& local_info, Stats::Scope& scope,
-                             const std::string& stat_prefix, ThreadLocal::Instance& tls);
+                             const std::string& stat_prefix, ThreadLocal::Instance& tls,
+                             Server::HttpRouteManager& http_route_manager);
   void registerInitTarget(Init::Manager& init_manager);
 
   Runtime::Loader& runtime_;
@@ -118,6 +120,7 @@ private:
   uint64_t last_config_hash_{};
   RdsStats stats_;
   std::function<void()> initialize_callback_;
+  Server::HttpRouteManager& http_route_manager_;
 
   friend class RouteConfigProviderUtil;
 };

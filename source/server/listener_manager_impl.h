@@ -209,6 +209,7 @@ public:
   Event::Dispatcher& dispatcher() override { return parent_.server_.dispatcher(); }
   Network::DrainDecision& drainDecision() override { return *this; }
   bool healthCheckFailed() override { return parent_.server_.healthCheckFailed(); }
+  HttpRouteManager& httpRouteManager() override { return parent_.server_.httpRouteManager(); }
   Tracing::HttpTracer& httpTracer() override { return parent_.server_.httpTracer(); }
   Init::Manager& initManager() override;
   const LocalInfo::LocalInfo& localInfo() override { return parent_.server_.localInfo(); }

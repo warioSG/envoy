@@ -13,11 +13,11 @@
 namespace Envoy {
 namespace Router {
 
-RouteConfigProviderPtr RouteConfigProviderUtil::create(
+RouteConfigProviderSharedPtr RouteConfigProviderUtil::create(
     const Json::Object& config, Runtime::Loader& runtime, Upstream::ClusterManager& cm,
     Event::Dispatcher& dispatcher, Runtime::RandomGenerator& random,
     const LocalInfo::LocalInfo& local_info, Stats::Scope& scope, const std::string& stat_prefix,
-    ThreadLocal::Instance& tls, Init::Manager& init_manager) {
+    ThreadLocal::Instance& tls, Init::Manager& init_manager, Server::HttpRouteManager& http_route_manager) {
   bool has_rds = config.hasObject("rds");
   bool has_route_config = config.hasObject("route_config");
   if (!(has_rds ^ has_route_config)) {
@@ -26,15 +26,24 @@ RouteConfigProviderPtr RouteConfigProviderUtil::create(
   }
 
   if (has_route_config) {
-    return RouteConfigProviderPtr{
+    return RouteConfigProviderSharedPtr{
         new StaticRouteConfigProviderImpl(*config.getObject("route_config"), runtime, cm)};
   } else {
     Json::ObjectSharedPtr rds_config = config.getObject("rds");
     rds_config->validateSchema(Json::Schema::RDS_CONFIGURATION_SCHEMA);
-    std::unique_ptr<RdsRouteConfigProviderImpl> provider{new RdsRouteConfigProviderImpl(
-        *rds_config, runtime, cm, dispatcher, random, local_info, scope, stat_prefix, tls)};
-    provider->registerInitTarget(init_manager);
-    return std::move(provider);
+    const std::string name = rds_config->getString("route_config_name");
+    RouteConfigProviderSharedPtr provider = http_route_manager.getConfigProvider(name);
+    if (provider != nullptr) {
+      return std::move(provider);
+    } else {
+      std::shared_ptr<RdsRouteConfigProviderImpl> new_provider{new RdsRouteConfigProviderImpl(
+        *rds_config, runtime, cm, dispatcher, random, local_info, scope, stat_prefix, tls, http_route_manager)};
+      new_provider->registerInitTarget(init_manager);
+
+      http_route_manager.addConfigProvider(name, std::weak_ptr<RdsRouteConfigProviderImpl>(new_provider));
+
+      return std::move(new_provider);
+    }
   }
 }
 
@@ -49,13 +58,14 @@ RdsRouteConfigProviderImpl::RdsRouteConfigProviderImpl(
     const Json::Object& config, Runtime::Loader& runtime, Upstream::ClusterManager& cm,
     Event::Dispatcher& dispatcher, Runtime::RandomGenerator& random,
     const LocalInfo::LocalInfo& local_info, Stats::Scope& scope, const std::string& stat_prefix,
-    ThreadLocal::Instance& tls)
+    ThreadLocal::Instance& tls, Server::HttpRouteManager& http_route_manager)
 
     : RestApiFetcher(cm, config.getString("cluster"), dispatcher, random,
                      std::chrono::milliseconds(config.getInteger("refresh_delay_ms", 30000))),
       runtime_(runtime), local_info_(local_info), tls_(tls), tls_slot_(tls.allocateSlot()),
       route_config_name_(config.getString("route_config_name")),
-      stats_({ALL_RDS_STATS(POOL_COUNTER_PREFIX(scope, stat_prefix + "rds."))}) {
+      stats_({ALL_RDS_STATS(POOL_COUNTER_PREFIX(scope, stat_prefix + "rds."))}),
+      http_route_manager_(http_route_manager) {
 
   ::Envoy::Config::Utility::checkClusterAndLocalInfo("rds", remote_cluster_name_, cm, local_info);
   ConfigConstSharedPtr initial_config(new NullConfigImpl());
@@ -68,6 +78,12 @@ RdsRouteConfigProviderImpl::RdsRouteConfigProviderImpl(
 RdsRouteConfigProviderImpl::~RdsRouteConfigProviderImpl() {
   // If we get destroyed during initialization, make sure we signal that we "initialized".
   onFetchComplete();
+
+  // The ownership of RdsRouteConfigProviderImpl is shared among all ConnectionManagers that
+  // hold a share_ptr to it. The HttpRouteManager holds a map of weak_ptrs to the RdsRouteConfigProviders.
+  // Therefore, the map entry for the RdsRouteConfigProvider has to get cleaned by the
+  // RdsRouteConfigProvider's destructor.
+  http_route_manager_.removeRouteConfigProvider(route_config_name_);
 }
 
 Router::ConfigConstSharedPtr RdsRouteConfigProviderImpl::config() {
