@@ -147,8 +147,11 @@ public:
   ~MockHttpRouteManager();
 
   MOCK_METHOD0(routeConfigProviders, std::vector<Router::RouteConfigProviderSharedPtr>());
-  MOCK_METHOD2(addConfigProvider, void(const std::string& name, std::weak_ptr<Router::RouteConfigProvider> routeConfigProvider));
-  MOCK_METHOD1(getConfigProvider, Router::RouteConfigProviderSharedPtr(const std::string& name));
+  MOCK_METHOD2(addRouteConfigProvider,
+               void(const std::string& name,
+                    std::weak_ptr<Router::RouteConfigProvider> routeConfigProvider));
+  MOCK_METHOD1(getRouteConfigProvider,
+               Router::RouteConfigProviderSharedPtr(const std::string& name));
   MOCK_METHOD1(removeRouteConfigProvider, void(const std::string& name));
 };
 

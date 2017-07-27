@@ -17,7 +17,8 @@ RouteConfigProviderSharedPtr RouteConfigProviderUtil::create(
     const Json::Object& config, Runtime::Loader& runtime, Upstream::ClusterManager& cm,
     Event::Dispatcher& dispatcher, Runtime::RandomGenerator& random,
     const LocalInfo::LocalInfo& local_info, Stats::Scope& scope, const std::string& stat_prefix,
-    ThreadLocal::Instance& tls, Init::Manager& init_manager, Server::HttpRouteManager& http_route_manager) {
+    ThreadLocal::Instance& tls, Init::Manager& init_manager,
+    Server::HttpRouteManager& http_route_manager) {
   bool has_rds = config.hasObject("rds");
   bool has_route_config = config.hasObject("route_config");
   if (!(has_rds ^ has_route_config)) {
@@ -32,15 +33,17 @@ RouteConfigProviderSharedPtr RouteConfigProviderUtil::create(
     Json::ObjectSharedPtr rds_config = config.getObject("rds");
     rds_config->validateSchema(Json::Schema::RDS_CONFIGURATION_SCHEMA);
     const std::string name = rds_config->getString("route_config_name");
-    RouteConfigProviderSharedPtr provider = http_route_manager.getConfigProvider(name);
+    RouteConfigProviderSharedPtr provider = http_route_manager.getRouteConfigProvider(name);
     if (provider != nullptr) {
       return std::move(provider);
     } else {
-      std::shared_ptr<RdsRouteConfigProviderImpl> new_provider{new RdsRouteConfigProviderImpl(
-        *rds_config, runtime, cm, dispatcher, random, local_info, scope, stat_prefix, tls, http_route_manager)};
+      std::shared_ptr<RdsRouteConfigProviderImpl> new_provider{
+          new RdsRouteConfigProviderImpl(*rds_config, runtime, cm, dispatcher, random, local_info,
+                                         scope, stat_prefix, tls, http_route_manager)};
       new_provider->registerInitTarget(init_manager);
 
-      http_route_manager.addConfigProvider(name, std::weak_ptr<RdsRouteConfigProviderImpl>(new_provider));
+      http_route_manager.addRouteConfigProvider(
+          name, std::weak_ptr<RdsRouteConfigProviderImpl>(new_provider));
 
       return std::move(new_provider);
     }
@@ -79,8 +82,8 @@ RdsRouteConfigProviderImpl::~RdsRouteConfigProviderImpl() {
   // If we get destroyed during initialization, make sure we signal that we "initialized".
   onFetchComplete();
 
-  // The ownership of RdsRouteConfigProviderImpl is shared among all ConnectionManagers that
-  // hold a share_ptr to it. The HttpRouteManager holds a map of weak_ptrs to the RdsRouteConfigProviders.
+  // The ownership of RdsRouteConfigProviderImpl is shared among all HttpConnectionManagers that
+  // hold a shared_ptr to it. The HttpRouteManager holds weak_ptrs to the RdsRouteConfigProviders.
   // Therefore, the map entry for the RdsRouteConfigProvider has to get cleaned by the
   // RdsRouteConfigProvider's destructor.
   http_route_manager_.removeRouteConfigProvider(route_config_name_);

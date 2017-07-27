@@ -23,15 +23,15 @@ namespace Router {
 class RouteConfigProviderUtil {
 public:
   /**
-   * @return RouteConfigProviderSharedPtr a new route configuration provider based on the supplied JSON
-   *         configuration.
+   * @return RouteConfigProviderSharedPtr a new route configuration provider based on the supplied
+   * JSON configuration.
    */
-  static RouteConfigProviderSharedPtr create(const Json::Object& config, Runtime::Loader& runtime,
-                                       Upstream::ClusterManager& cm, Event::Dispatcher& dispatcher,
-                                       Runtime::RandomGenerator& random,
-                                       const LocalInfo::LocalInfo& local_info, Stats::Scope& scope,
-                                       const std::string& stat_prefix, ThreadLocal::Instance& tls,
-                                       Init::Manager& init_manager, Server::HttpRouteManager& http_route_manager);
+  static RouteConfigProviderSharedPtr
+  create(const Json::Object& config, Runtime::Loader& runtime, Upstream::ClusterManager& cm,
+         Event::Dispatcher& dispatcher, Runtime::RandomGenerator& random,
+         const LocalInfo::LocalInfo& local_info, Stats::Scope& scope,
+         const std::string& stat_prefix, ThreadLocal::Instance& tls, Init::Manager& init_manager,
+         Server::HttpRouteManager& http_route_manager);
 };
 
 /**

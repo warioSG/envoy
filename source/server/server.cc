@@ -169,7 +169,7 @@ void InstanceImpl::initialize(Options& options, ComponentFactory& component_fact
       runtime(), stats(), threadLocal(), random(), dnsResolver(), sslContextManager(), dispatcher(),
       localInfo()));
 
-  // Set the HttpRouteManager
+  // Set the HttpRouteManager.
   http_route_manager_.reset(new HttpRouteManagerImpl());
 
   // Now the configuration gets parsed. The configuration may start setting thread local data
