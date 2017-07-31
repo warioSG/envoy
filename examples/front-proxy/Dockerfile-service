@@ -4,7 +4,13 @@ RUN apt-get update && apt-get -q install -y \
     curl \
     python-pip
 RUN pip install -q Flask==0.11.1
+COPY ./cert.key /etc
+ADD ./cert.pem /etc
+
 RUN mkdir /code
+ADD client.crt /etc
+ADD client.key /etc
+
 ADD ./service.py /code
 ADD ./start_service.sh /usr/local/bin/start_service.sh
 RUN chmod u+x /usr/local/bin/start_service.sh

@@ -2,4 +2,6 @@ FROM lyft/envoy:latest
 
 RUN apt-get update && apt-get -q install -y \
     curl
+COPY front-proxy/cert.key /etc
+ADD front-proxy/cert.pem /etc
 CMD /usr/local/bin/envoy -c /etc/front-envoy.json --service-cluster front-proxy

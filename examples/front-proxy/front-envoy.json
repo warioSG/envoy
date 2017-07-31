@@ -54,6 +54,10 @@
         "type": "strict_dns",
         "lb_type": "round_robin",
         "features": "http2",
+        "ssl_context": {
+          "cert_chain_file": "/etc/cert.pem",
+          "private_key_file": "/etc/cert.key"
+        },
         "hosts": [
           {
             "url": "tcp://service1:80"

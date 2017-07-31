@@ -5,6 +5,16 @@
       "filters": [
         {
           "type": "read",
+          "name": "client_ssl_auth",
+          "config": {
+          "auth_api_cluster": "cert",
+          "stat_prefix": "foo",
+          "refresh_delay_ms": 6000
+          
+  }
+        },
+        {
+          "type": "read",
           "name": "http_connection_manager",
           "config": {
             "codec_type": "auto",
@@ -33,7 +43,11 @@
             ]
           }
         }
-      ]
+      ],
+      "ssl_context":{
+          "cert_chain_file": "/etc/cert.pem",
+          "private_key_file": "/etc/cert.key"
+      }
     }
   ],
   "admin": {
@@ -52,7 +66,19 @@
             "url": "tcp://127.0.0.1:8080"
           }
         ]
+      },
+      {
+        "name": "cert",
+                "connect_timeout_ms": 250,
+        "type": "strict_dns",
+        "lb_type": "round_robin",
+        "hosts": [
+          {
+            "url": "tcp://cert:8002"
+          }
+        ]
       }
+
     ]
   }
 }

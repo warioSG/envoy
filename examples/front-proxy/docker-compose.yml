@@ -16,6 +16,17 @@ services:
       - "8000:80"
       - "8001:8001"
 
+  cert:
+    build:
+      context: .
+      dockerfile: Dockerfile-cert
+    networks:
+      envoymesh:
+        aliases:
+          - cert
+    expose:
+      - "8002"
+      
   service1:
     build:
       context: .
